@@ -4,24 +4,6 @@ environment:
     CYG_PACKAGES: make,gcc-core,clang,pkg-config,libpcre-devel,cmake,python-setuptools,ruby,mingw64-i686-gcc-core,mingw64-x86_64-gcc-core
     MSYS_PACKAGES: mingw-w64-x86_64-cmocka mingw-w64-i686-cmocka mingw-w64-x86_64-python2-setuptools mingw-w64-i686-python2-setuptools
     matrix:
-        - MSYSTEM: MINGW64
-          BASH: C:\msys64\usr\bin\bash
-          MSYS_CACHE: C:\msys64\var\cache\pacman\pkg
-          CC: x86_64-w64-mingw32-gcc
-        - MSYSTEM: MINGW32
-          BASH: C:\msys64\usr\bin\bash
-          MSYS_CACHE: C:\msys64\var\cache\pacman\pkg
-          CC: i686-w64-mingw32-gcc
-        - CYG_ROOT: C:\cygwin64
-          CYG_CACHE: C:\cygwin64\var\cache\setup
-          CYG_SETUP: setup-x86_64.exe
-          BASH: C:\cygwin64\bin\bash
-          CC: gcc
-        - CYG_ROOT: C:\cygwin
-          CYG_CACHE: C:\cygwin\var\cache\setup
-          CYG_SETUP: setup-x86.exe
-          BASH: C:\cygwin\bin\bash
-          CC: gcc
         - CC: msvc
 
 # Cache Cygwin/MSYS files to speed up build
@@ -45,7 +27,7 @@ install:
 build_script:
     - if defined BASH (%BASH% -lc "cd $(cygpath ${APPVEYOR_BUILD_FOLDER}) && make")
     - if "%MSYSTEM%" == "MINGW64" (%BASH% -lc "cd $(cygpath ${APPVEYOR_BUILD_FOLDER}) && make -C bindings/go")
-    - if "%CC%" == "msvc" (msbuild %APPVEYOR_BUILD_FOLDER%/msvc/unicorn.sln)
+    - if "%CC%" == "msvc" (msbuild %APPVEYOR_BUILD_FOLDER%/msvc/unicorn.sln /t:Build /p:Configuration=Release)
     # make test
     #- 'cd %APPVEYOR_BUILD_FOLDER% && cd bindings\dotnet && msbuild UnicornDotNet.sln'
 # Allows RDP
@@ -56,3 +38,7 @@ build_script:
 test_script:
     - if defined CYG_ROOT (%BASH% -lc "cd $APPVEYOR_BUILD_FOLDER && ./install-cmocka-linux.sh && export PATH=$PATH:$APPVEYOR_BUILD_FOLDER:$APPVEYOR_BUILD_FOLDER/cmocka/src && make test")
     - if defined MSYSTEM (%BASH% -lc "cd $APPVEYOR_BUILD_FOLDER && export PATH=$PATH:$APPVEYOR_BUILD_FOLDER && make test")
+
+artifacts:
+    - path: msvc/Win32/Release/unicorn.dll
+      name: unicorn.dll
