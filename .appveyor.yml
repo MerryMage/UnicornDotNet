@@ -1,10 +1,14 @@
 # Appveyor configuration file for CI build of Unicorn Engine on Windows
+image:
+    - Visual Studio 2017
 environment:
     CYG_MIRROR: http://cygwin.mirror.constant.com
     CYG_PACKAGES: make,gcc-core,clang,pkg-config,libpcre-devel,cmake,python-setuptools,ruby,mingw64-i686-gcc-core,mingw64-x86_64-gcc-core
     MSYS_PACKAGES: mingw-w64-x86_64-cmocka mingw-w64-i686-cmocka mingw-w64-x86_64-python2-setuptools mingw-w64-i686-python2-setuptools
     matrix:
-        - CC: msvc
+        - platform: x64
+          CC: msvc
+          configuration: Release
 
 # Cache Cygwin/MSYS files to speed up build
 cache:
@@ -27,7 +31,7 @@ install:
 build_script:
     - if defined BASH (%BASH% -lc "cd $(cygpath ${APPVEYOR_BUILD_FOLDER}) && make")
     - if "%MSYSTEM%" == "MINGW64" (%BASH% -lc "cd $(cygpath ${APPVEYOR_BUILD_FOLDER}) && make -C bindings/go")
-    - if "%CC%" == "msvc" (msbuild %APPVEYOR_BUILD_FOLDER%/msvc/unicorn.sln /t:Build /p:Configuration=Release)
+    - if "%CC%" == "msvc" (msbuild %APPVEYOR_BUILD_FOLDER%/msvc/unicorn.sln /t:Build /p:Configuration=Release /p:PlatformTarget=x64)
     # make test
     #- 'cd %APPVEYOR_BUILD_FOLDER% && cd bindings\dotnet && msbuild UnicornDotNet.sln'
 # Allows RDP
@@ -40,5 +44,5 @@ test_script:
     - if defined MSYSTEM (%BASH% -lc "cd $APPVEYOR_BUILD_FOLDER && export PATH=$PATH:$APPVEYOR_BUILD_FOLDER && make test")
 
 artifacts:
-    - path: msvc/Win32/Release/unicorn.dll
+    - path: msvc/**/unicorn.dll
       name: unicorn.dll
